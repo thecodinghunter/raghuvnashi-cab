@@ -1,3 +1,13 @@
+// Helper to convert Firestore Timestamp or {seconds, nanoseconds} to Date
+function toDateSafe(val: any): Date {
+  if (!val) return new Date(NaN);
+  if (val instanceof Date) return val;
+  if (typeof val.toDate === 'function') return val.toDate();
+  if (typeof val.seconds === 'number' && typeof val.nanoseconds === 'number') {
+    return new Date(val.seconds * 1000 + Math.floor(val.nanoseconds / 1e6));
+  }
+  return new Date(val);
+}
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -76,12 +86,12 @@ export default function HistoryPage() {
     
     return rides
       .filter(ride => {
-        const rideDate = ride.createdAt instanceof Timestamp ? ride.createdAt.toDate() : new Date(ride.createdAt);
+        const rideDate = toDateSafe(ride.createdAt);
         return rideDate >= startDate && rideDate <= endDate;
       })
       .sort((a, b) => {
-          const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate() : new Date(a.createdAt);
-          const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate() : new Date(b.createdAt);
+          const dateA = toDateSafe(a.createdAt);
+          const dateB = toDateSafe(b.createdAt);
           return dateB.getTime() - dateA.getTime();
       });
 
