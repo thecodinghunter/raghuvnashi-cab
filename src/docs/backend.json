@@ -1,0 +1,134 @@
+
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Jalaram cabs application.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the User entity." },
+        "name": { "type": "string", "description": "The user's full name." },
+        "email": { "type": "string", "description": "The user's email address.", "format": "email" },
+        "phoneNumber": { "type": "string", "description": "The user's phone number." },
+        "role": { "type": "string", "description": "The user's role (e.g., 'user', 'driver').", "enum": ["user", "driver", "admin"] },
+        "createdAt": { "type": "string", "description": "The timestamp when the user account was created.", "format": "date-time" },
+        "isEmailVerified": { "type": "boolean", "description": "Indicates whether the user's email address has been verified." },
+        "vehicleType": { "type": "string", "description": "The type of driver's vehicle (e.g., 'Sedan', 'SUV')." },
+        "plateNumber": { "type": "string", "description": "The license plate number of the driver's vehicle." },
+        "aadharNumber": { "type": "string", "description": "The driver's Aadhar card number." },
+        "licenseNumber": { "type": "string", "description": "The driver's license number." },
+        "rcNumber": { "type": "string", "description": "The driver's vehicle RC number." },
+        "status": { "type": "string", "description": "The current status of the user or driver account.", "enum": ["pending", "approved", "blocked", "active", "suspended"] }
+      },
+      "required": ["id", "name", "role", "createdAt"]
+    },
+    "Ride": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Ride",
+      "type": "object",
+      "description": "Represents a single ride transaction in the Jalaram cabs application.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the ride." },
+        "userId": { "type": "string", "description": "The ID of the user who booked the ride." },
+        "userName": { "type": "string", "description": "The name of the user who booked the ride." },
+        "driverId": { "type": ["string", "null"], "description": "The ID of the driver assigned to the ride. Can be null if unassigned." },
+        "driverName": { "type": ["string", "null"], "description": "The name of the driver assigned to the ride." },
+        "pickup": { "type": "string", "description": "The pickup location address." },
+        "dropoff": { "type": "string", "description": "The dropoff location address." },
+        "fare": { "type": "number", "description": "The total fare for the ride." },
+        "status": { "type": "string", "description": "The current status of the ride.", "enum": ["Requested", "Accepted", "In Progress", "Completed", "Cancelled", "Disputed"] },
+        "createdAt": { "type": "string", "description": "The timestamp when the ride was created.", "format": "date-time" },
+        "pickupCoords": {
+          "type": "object",
+          "properties": { "lat": { "type": "number" }, "lon": { "type": "number" } }
+        },
+        "dropoffCoords": {
+          "type": "object",
+          "properties": { "lat": { "type": "number" }, "lon": { "type": "number" } }
+        },
+        "vehicleType": { "type": "string", "description": "The type of vehicle requested for the ride." },
+        "otp": { "type": "number", "description": "A 4-digit one-time password for verifying the start of the ride." },
+        "acceptedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the driver accepted the ride." },
+        "rideStartedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the ride officially started after OTP verification." },
+        "completedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the ride was completed." }
+      },
+      "required": ["id", "userId", "pickup", "dropoff", "fare", "status", "createdAt"]
+    },
+    "VendorFee": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "VendorFee",
+      "type": "object",
+      "description": "Represents a daily vendor fee for a driver.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the fee record." },
+        "driverId": { "type": "string", "description": "The ID of the driver." },
+        "driverName": { "type": "string", "description": "The name of the driver." },
+        "date": { "type": "string", "description": "The date for which the fee is applicable.", "format": "date" },
+        "feeAmount": { "type": "number", "description": "The amount of the daily fee." },
+        "status": { "type": "string", "description": "The payment status of the fee.", "enum": ["paid", "unpaid"] }
+      },
+      "required": ["id", "driverId", "driverName", "date", "feeAmount", "status"]
+    },
+    "Complaint": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Complaint",
+      "type": "object",
+      "description": "Represents a user complaint or support ticket.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the complaint." },
+        "userId": { "type": "string", "description": "The ID of the user who filed the complaint." },
+        "userName": { "type": "string", "description": "The name of the user." },
+        "rideId": { "type": "string", "description": "The ID of the ride associated with the complaint." },
+        "message": { "type": "string", "description": "The content of the user's complaint." },
+        "status": { "type": "string", "description": "The current status of the complaint.", "enum": ["Open", "Resolved"] },
+        "createdAt": { "type": "string", "description": "The timestamp when the complaint was filed.", "format": "date-time" }
+      },
+      "required": ["id", "userId", "userName", "rideId", "message", "status", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": ["password", "phone"]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": { "$ref": "#/backend/entities/User" },
+          "description": "Stores user profiles. Includes 'role' for authorization.",
+          "params": [{ "name": "userId", "description": "The unique identifier for the user." }]
+        }
+      },
+      {
+        "path": "/rides/{rideId}",
+        "definition": {
+          "entityName": "Ride",
+          "schema": { "$ref": "#/backend/entities/Ride" },
+          "description": "Stores all ride transactions.",
+          "params": [{ "name": "rideId", "description": "The unique identifier for the ride." }]
+        }
+      },
+      {
+        "path": "/vendorFees/{feeId}",
+        "definition": {
+          "entityName": "VendorFee",
+          "schema": { "$ref": "#/backend/entities/VendorFee" },
+          "description": "Stores daily vendor fee records for drivers.",
+          "params": [{ "name": "feeId", "description": "The unique identifier for the vendor fee record." }]
+        }
+      },
+      {
+        "path": "/complaints/{complaintId}",
+        "definition": {
+          "entityName": "Complaint",
+          "schema": { "$ref": "#/backend/entities/Complaint" },
+          "description": "Stores user complaints and support tickets.",
+          "params": [{ "name": "complaintId", "description": "The unique identifier for the complaint." }]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is simplified for a single-instance application. All multi-tenancy fields and collections have been removed."
+  }
+}

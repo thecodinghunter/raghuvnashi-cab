@@ -1,0 +1,106 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // === Helper Functions ===
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'admin@jalaramcabs.app';
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // A safer way to check if the current user is a driver
+    function isDriver() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "driver";
+    }
+
+    // === USERS COLLECTION ===
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow update: if isOwner(userId) || isAdmin();
+      allow create: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // === RIDES COLLECTION ===
+    match /rides/{rideId} {
+
+      // Admin full access
+      allow read, write: if isAdmin();
+
+      // --- READ RULES ---
+      // Rider or assigned driver can read a specific ride document
+      allow get: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.driverId == request.auth.uid ||
+        isAdmin()
+      );
+
+      // Drivers can list all available "Requested" rides
+      allow list: if isDriver();
+
+      // --- CREATE RULES ---
+      // A signed-in user can create a ride request for themselves
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+
+      // --- UPDATE RULES ---
+      // Combined update rule for all valid scenarios
+      allow update: if isSignedIn() && (
+        // SCENARIO 1: A user cancels THEIR OWN ride.
+        // They can only change the status to 'Cancelled'.
+        (request.auth.uid == resource.data.userId &&
+         request.resource.data.status == 'Cancelled') ||
+
+        // SCENARIO 2: A driver accepts a ride.
+        // The ride must be 'Requested', and the driver must be assigning themself.
+        (isDriver() &&
+         resource.data.status == 'Requested' &&
+         request.resource.data.status == 'Accepted' &&
+         request.resource.data.driverId == request.auth.uid) ||
+
+        // SCENARIO 3: An assigned driver updates a ride they own (e.g., to 'In Progress' or 'Completed')
+        (isDriver() &&
+         resource.data.driverId == request.auth.uid &&
+         request.resource.data.driverId == request.auth.uid)
+      );
+    }
+
+
+    // === VENDOR FEES COLLECTION ===
+    match /vendorFees/{feeId} {
+      allow read: if isSignedIn() &&
+        (isAdmin() || resource.data.driverId == request.auth.uid);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // === COMPLAINTS COLLECTION ===
+    match /complaints/{complaintId} {
+      allow read: if isSignedIn() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // === DRIVER LOCATIONS ===
+    match /driverLocations/{driverId} {
+      allow read: if isSignedIn();
+      allow write: if isDriver() && request.auth.uid == driverId;
+    }
+
+    // === PLATFORM SETTINGS ===
+    match /platformSettings/{settingId} {
+        allow read: if true;
+        allow write: if isAdmin();
+    }
+  }
+}

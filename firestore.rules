@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+    match /databases/{database}/documents {
+
+          // === Helper Functions ===
+              function isSignedIn() {
+                      return request.auth != null;
+              }
+
+                  function isAdmin() {
+                          return isSignedIn() && request.auth.token.email == 'admin@jalaramcabs.app';
+                  }
+
+                      function isOwner(userId) {
+                              return request.auth.uid == userId;
+                      }
+
+                          // 🚀 Safe driver check (avoids get() crash)
+                              function isDriver() {
+                                      return isSignedIn() &&
+                                              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                                                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "driver";
+                              }
+
+                                  // === USERS COLLECTION ===
+                                      match /users/{userId} {
+                                              allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+                                                    allow update: if isOwner(userId) || isAdmin();
+                                                          allow create: if isSignedIn();
+                                                                allow delete: if isAdmin();
+                                      }
+
+                                          // === RIDES COLLECTION ===
+                                              match /rides/{rideId} {
+
+                                                      // Admin full access
+                                                            allow read, write: if isAdmin();
+
+                                                                  // Users & Drivers can read their rides
+                                                                        allow get: if isSignedIn() && (
+                                                                                  resource.data.userId == request.auth.uid ||
+                                                                                          resource.data.driverId == request.auth.uid ||
+                                                                                                  isAdmin()
+                                                                        );
+
+                                                                              // Drivers can see available rides
+                                                                                    allow list: if isDriver();
+
+                                                                                          // Rider can create ride for themselves
+                                                                                                allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+
+                                                                                                      // === UPDATE ===
+
+                                                                                                            // 1️⃣ Rider updates their own ride (but not driver/status)
+                                                                                                                  allow update: if isSignedIn() &&
+                                                                                                                          request.auth.uid == resource.data.userId &&
+                                                                                                                                  !('status' in request.resource.data) &&
+                                                                                                                                          !('driverId' in request.resource.data);
+
+                                                                                                                                                // 2️⃣ Driver accepts & manages rides
+                                                                                                                                                      allow update: if isDriver() && (
+                                                                                                                                                                // ✅ Accept (Requested → Accepted)
+                                                                                                                                                                        (resource.data.status == "Requested" &&
+                                                                                                                                                                                 request.resource.data.status == "Accepted" &&
+                                                                                                                                                                                          request.resource.data.driverId == request.auth.uid) ||
+
+                                                                                                                                                                                                  // ✅ Manage assigned ride (In Progress, Completed)
+                                                                                                                                                                                                          (resource.data.driverId == request.auth.uid &&
+                                                                                                                                                                                                                    request.resource.data.status in ["Accepted", "In Progress", "Completed"])
+                                                                                                                                                      );
+                                              }
+                                                  
+                                                      // === VENDOR FEES COLLECTION ===
+                                                          match /vendorFees/{feeId} {
+                                                                  allow read: if isSignedIn() &&
+                                                                          (isAdmin() || resource.data.driverId == request.auth.uid);
+                                                                                allow create, update, delete: if isAdmin();
+                                                          }
+
+                                                              // === COMPLAINTS COLLECTION ===
+                                                                  match /complaints/{complaintId} {
+                                                                          allow read: if isSignedIn() &&
+                                                                                  (resource.data.userId == request.auth.uid || isAdmin());
+                                                                                        allow create: if isSignedIn() &&
+                                                                                                request.resource.data.userId == request.auth.uid;
+                                                                                                      allow update, delete: if isAdmin();
+                                                                  }
+
+                                                                      // === DRIVER LOCATIONS ===
+        match /driverLocations/{driverId} {
+            allow read: if isSignedIn();
+            allow write: if isDriver() && request.auth.uid == driverId;
+        }
+
+        // === PLATFORM SETTINGS ===
+        match /platformSettings/{settingId} {
+            allow read: if true;
+            allow write: if isAdmin();
+        }
+    }
+}
+                                                                          }
+                                                                  }
+                                                          }
+                                                                                                                                                      )
+                                                                        )
+                                              }
+                                      }
+                              }
+                      }
+                  }
+              }
+    }
+}
