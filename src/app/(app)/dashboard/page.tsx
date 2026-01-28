@@ -49,10 +49,10 @@ export default function DriverDashboardPage() {
     );
   }, [firestore, user]);
 
-  const { data: allDrives, isLoading: isLoadingRides } = useCollection<Ride>(ridesQuery);
+  const { data: allDrives, loading: loadingRides } = useCollection<Ride>(ridesQuery);
 
   const dashboardData: DashboardData | null = useMemo(() => {
-    if (isLoadingRides || isUserLoading) return null;
+    if (loadingRides || isUserLoading) return null;
     if (!allDrives) return { totalRidesToday: 0, todaysEarnings: 0 };
 
     const todayStart = new Date();
@@ -72,7 +72,7 @@ export default function DriverDashboardPage() {
         totalRidesToday,
         todaysEarnings,
     }
-  }, [allDrives, isUserLoading, isLoadingRides]);
+  }, [allDrives, isUserLoading, loadingRides]);
 
 
   if (dashboardData === null) {
