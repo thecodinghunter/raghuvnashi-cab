@@ -113,7 +113,7 @@ export default function DriverDashboardPage() {
        </div>
 
        <div className="relative h-64 md:h-96 w-full">
-        <LiveMap ride={null} driverPosition={driverPosition} />
+        <LiveMap driverPosition={driverPosition} />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent pointer-events-none" />
       </div>
 
