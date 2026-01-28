@@ -100,15 +100,18 @@ export const allRides: Omit<Ride, 'id'>[] = Array.from({ length: 50 }, (_, i): O
     const driverName = faker.helpers.arrayElement(driverNames);
     
     return {
-        userId: faker.string.uuid(),
-        userName: faker.person.fullName(),
-        driverId: `driver_${driverNames.indexOf(driverName) + 1}`,
-        driverName: driverName,
-        pickup: faker.location.streetAddress(),
-        dropoff: faker.location.streetAddress(),
-        fare: parseFloat(faker.finance.amount({ min: 5, max: 50, dec: 2 })),
-        status: faker.helpers.arrayElement(statusOptions),
-        createdAt: faker.date.recent({ days: 30 }),
+      userId: faker.string.uuid(),
+      userName: faker.person.fullName(),
+      driverId: `driver_${driverNames.indexOf(driverName) + 1}`,
+      driverName: driverName,
+      pickup: faker.location.streetAddress(),
+      dropoff: faker.location.streetAddress(),
+      pickupCoords: { lat: faker.location.latitude(), lon: faker.location.longitude() },
+      dropoffCoords: { lat: faker.location.latitude(), lon: faker.location.longitude() },
+      fare: parseFloat(faker.finance.amount({ min: 5, max: 50, dec: 2 })),
+      status: faker.helpers.arrayElement(statusOptions),
+      createdAt: faker.date.recent({ days: 30 }),
+      vehicleType: faker.helpers.arrayElement(['Sedan', 'SUV', 'Hatchback', 'Mini'])
     };
 });
 

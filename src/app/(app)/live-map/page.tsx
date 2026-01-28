@@ -318,7 +318,6 @@ export default function LiveMapPage() {
       </div>
 
       <LiveMap
-        ride={rideInProgress ?? null}
         driverPosition={driverPosition}
         pickup={
           rideInProgress?.pickupCoords

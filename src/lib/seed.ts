@@ -1,7 +1,7 @@
 import { collection, doc, getDocs, writeBatch, query, where } from 'firebase/firestore';
 import { allRides, allComplaints } from './data';
 import { faker } from '@faker-js/faker';
-import type { Driver } from '@/app/admin/drivers/page';
+import type { Driver } from '@/lib/types';
 
 const defaultVendorFee = 250;
 

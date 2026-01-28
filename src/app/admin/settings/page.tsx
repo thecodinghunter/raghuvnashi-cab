@@ -79,8 +79,8 @@ const PlatformSettingsPage = () => {
             maintenanceMode: typeof raw.maintenanceMode === 'boolean' ? raw.maintenanceMode : DEFAULT_PLATFORM_SETTINGS.maintenanceMode,
             defaultCurrency: raw.defaultCurrency || DEFAULT_PLATFORM_SETTINGS.defaultCurrency,
             appVersion: raw.appVersion || DEFAULT_PLATFORM_SETTINGS.appVersion,
-            appName: raw.appName || DEFAULT_PLATFORM_SETTINGS.appName,
-            appLogoUrl: raw.appLogoUrl || DEFAULT_PLATFORM_SETTINGS.appLogoUrl,
+            // appName: raw.appName || DEFAULT_PLATFORM_SETTINGS.appName,
+            // appLogoUrl: raw.appLogoUrl || DEFAULT_PLATFORM_SETTINGS.appLogoUrl,
           };
           setSettings(data);
           return data;
@@ -122,8 +122,8 @@ const PlatformSettingsPage = () => {
         maintenanceMode: Boolean(updatedSettings.maintenanceMode),
         defaultCurrency: updatedSettings.defaultCurrency || DEFAULT_PLATFORM_SETTINGS.defaultCurrency,
         appVersion: updatedSettings.appVersion || DEFAULT_PLATFORM_SETTINGS.appVersion,
-        appName: updatedSettings.appName || DEFAULT_PLATFORM_SETTINGS.appName,
-        appLogoUrl: updatedSettings.appLogoUrl || DEFAULT_PLATFORM_SETTINGS.appLogoUrl,
+        // appName: updatedSettings.appName || DEFAULT_PLATFORM_SETTINGS.appName,
+        // appLogoUrl: updatedSettings.appLogoUrl || DEFAULT_PLATFORM_SETTINGS.appLogoUrl,
       };
 
       const dataToSave = {
@@ -198,7 +198,7 @@ const PlatformSettingsPage = () => {
       const path = `app-assets/logo-${Date.now()}-${file.name}`;
       const downloadURL = await uploadFile(storage, file, path);
 
-      setSettings(prev => ({ ...prev, appLogoUrl: downloadURL }));
+      setSettings(prev => ({ ...prev })); // appLogoUrl removed from PlatformSettings
       setHasChanges(true);
       toast({
         title: 'Logo Uploaded',
@@ -257,14 +257,14 @@ const PlatformSettingsPage = () => {
             </CardHeader>
             <CardContent className="p-4 grid gap-6 md:grid-cols-2">
               <div className="grid gap-3">
-                <Label htmlFor="appName" className="text-base font-semibold">
+                {/* <Label htmlFor="appName" className="text-base font-semibold"> */}
                   App Name
-                </Label>
+                {/* </Label> */}
                 <Input
-                  id="appName"
+                  // id="appName"
                   type="text"
-                  value={settings.appName || ''}
-                  onChange={(e) => handleInputChange('appName', e.target.value)}
+                  // value={settings.appName || ''}
+                  // onChange={(e) => handleInputChange('appName', e.target.value)}
                   placeholder="Jalaram Cabs"
                 />
               </div>
@@ -272,20 +272,7 @@ const PlatformSettingsPage = () => {
               <div className="grid gap-3">
                 <Label className="text-base font-semibold">App Logo</Label>
                 <div className="flex items-center gap-4">
-                  {settings.appLogoUrl ? (
-                    <div className="relative h-16 w-16 border rounded-lg overflow-hidden bg-white">
-                      <Image
-                        src={settings.appLogoUrl}
-                        alt="App Logo"
-                        fill
-                        className="object-contain p-1"
-                      />
-                    </div>
-                  ) : (
-                    <div className="h-16 w-16 border rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xs text-center p-1">
-                      No Logo
-                    </div>
-                  )}
+                  {/* App logo display removed: appLogoUrl is not in PlatformSettings */}
                   <div className="flex-1">
                     <Input
                       id="appLogo"

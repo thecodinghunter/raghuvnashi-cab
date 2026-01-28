@@ -1,4 +1,14 @@
-'use client';
+"use client";
+// Helper to convert Firestore Timestamp or {seconds, nanoseconds} to Date
+function toDateSafe(val: any): Date {
+  if (!val) return new Date(NaN);
+  if (val instanceof Date) return val;
+  if (typeof val.toDate === 'function') return val.toDate();
+  if (typeof val.seconds === 'number' && typeof val.nanoseconds === 'number') {
+    return new Date(val.seconds * 1000 + Math.floor(val.nanoseconds / 1e6));
+  }
+  return new Date(val);
+}
 
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,7 +40,7 @@ const StatusInfo = ({ status }: { status: Ride['status'] }) => {
 };
 
 const RideHistoryCard = ({ ride, index, onClick }: RideHistoryCardProps) => {
-    const rideDate = ride.createdAt instanceof Date ? ride.createdAt : ride.createdAt.toDate();
+    const rideDate = toDateSafe(ride.createdAt);
 
   return (
     <motion.div

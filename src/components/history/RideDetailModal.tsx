@@ -1,4 +1,14 @@
-'use client';
+"use client";
+// Helper to convert Firestore Timestamp or {seconds, nanoseconds} to Date
+function toDateSafe(val: any): Date {
+    if (!val) return new Date(NaN);
+    if (val instanceof Date) return val;
+    if (typeof val.toDate === 'function') return val.toDate();
+    if (typeof val.seconds === 'number' && typeof val.nanoseconds === 'number') {
+        return new Date(val.seconds * 1000 + Math.floor(val.nanoseconds / 1e6));
+    }
+    return new Date(val);
+}
 import {
   Dialog,
   DialogContent,
@@ -33,7 +43,7 @@ const RideDetailModal = ({ ride, onClose }: RideDetailModalProps) => {
             <DialogHeader className="p-6 pb-4">
                 <DialogTitle>Ride Details</DialogTitle>
                 <DialogDescription>
-                    A summary of the ride from {new Date(ride.createdAt).toLocaleString()}.
+                    A summary of the ride from {toDateSafe(ride.createdAt).toLocaleString()}.
                 </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 pt-0">

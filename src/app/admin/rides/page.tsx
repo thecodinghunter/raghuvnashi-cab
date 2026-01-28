@@ -1,4 +1,14 @@
-'use client';
+"use client";
+// Helper to convert Firestore Timestamp or {seconds, nanoseconds} to Date
+function toDateSafe(val: any): Date {
+  if (!val) return new Date(NaN);
+  if (val instanceof Date) return val;
+  if (typeof val.toDate === 'function') return val.toDate();
+  if (typeof val.seconds === 'number' && typeof val.nanoseconds === 'number') {
+    return new Date(val.seconds * 1000 + Math.floor(val.nanoseconds / 1e6));
+  }
+  return new Date(val);
+}
 import { useMemo } from 'react';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
@@ -20,7 +30,7 @@ async function getRides(firestore: any): Promise<Ride[]> {
         const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt;
         return { id: doc.id, ...data, createdAt } as Ride;
     });
-    return rides.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return rides.sort((a, b) => toDateSafe(b.createdAt).getTime() - toDateSafe(a.createdAt).getTime());
   } catch (e: any) {
     errorEmitter.emit('permission-error', new FirestorePermissionError({
       path: 'rides',
