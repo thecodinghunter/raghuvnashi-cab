@@ -1,3 +1,5 @@
+
+'use client';
 // Helper to convert Firestore Timestamp or {seconds, nanoseconds} to Date
 function toDateSafe(val: any): Date {
   if (!val) return new Date(NaN);
@@ -8,7 +10,6 @@ function toDateSafe(val: any): Date {
   }
   return new Date(val);
 }
-'use client';
 
 import { useState, useMemo } from 'react';
 import { useFirestore, useUser } from '@/firebase';
